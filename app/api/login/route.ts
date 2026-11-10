@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const port = searchParams.get('port') || '49152';
 
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
+  const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || new URL(req.url).origin;
 
   if (!clientId) {
     return NextResponse.json(
