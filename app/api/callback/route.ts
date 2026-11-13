@@ -135,7 +135,8 @@ function renderHtmlSuccess(payload: any, port: string): string {
     p {
       color: #8b949e;
       line-height: 1.5;
-      margin: 8px 0 20px 0;
+      margin: 8px 0 16px 0;
+      font-size: 14px;
     }
     .email-badge {
       display: inline-block;
@@ -146,33 +147,59 @@ function renderHtmlSuccess(payload: any, port: string): string {
       border-radius: 20px;
       font-weight: 600;
       font-size: 14px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
-    .status {
-      font-size: 14px;
-      color: #3fb950;
-      font-weight: 500;
-      margin-top: 10px;
-    }
-    .fallback-box {
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid #30363d;
+    .token-container {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 16px 0;
       text-align: left;
+    }
+    .token-label {
+      font-size: 12px;
+      color: #8b949e;
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+    .token-box {
+      width: 100%;
+      height: 64px;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #79c0ff;
+      font-family: monospace;
+      font-size: 11px;
+      padding: 8px;
+      box-sizing: border-box;
+      resize: none;
+      word-break: break-all;
+    }
+    .token-box:focus {
+      outline: 1px solid #58a6ff;
     }
     .btn {
       background: #238636;
       color: white;
       border: none;
-      padding: 10px 18px;
+      padding: 12px 18px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
       width: 100%;
+      margin-top: 10px;
       transition: background 0.2s;
     }
     .btn:hover { background: #2ea043; }
+    .status {
+      font-size: 13px;
+      color: #8b949e;
+      margin-top: 14px;
+    }
   </style>
 </head>
 <body>
@@ -180,13 +207,15 @@ function renderHtmlSuccess(payload: any, port: string): string {
     <div class="icon">✓</div>
     <h1>Connected to Gmail!</h1>
     <div class="email-badge">${payload.email}</div>
-    <p>Your Google account has been authorized. We are handing off credentials to your local terminal...</p>
-    <div id="status" class="status">⚡ Connecting to llmcode on your machine...</div>
+    <p>Copy your token code below and paste it into your <code>llmcode</code> terminal:</p>
 
-    <div class="fallback-box">
-      <p style="font-size: 12px; margin-bottom: 10px;">Using remote SSH or server? Copy the token code manually:</p>
-      <button class="btn" onclick="copyToken()">Copy Token for CLI</button>
+    <div class="token-container">
+      <label class="token-label">Token Code (Click to Copy):</label>
+      <textarea id="tokenBox" class="token-box" readonly onclick="this.select()">${base64Str}</textarea>
+      <button id="copyBtn" class="btn" onclick="copyToken()">📋 Copy Token</button>
     </div>
+
+    <div id="status" class="status">⚡ Connecting to terminal automatically...</div>
   </div>
 
   <script>
@@ -203,20 +232,34 @@ function renderHtmlSuccess(payload: any, port: string): string {
           body: JSON.stringify(payload),
         });
         if (res.ok) {
-          statusEl.textContent = '✓ Done! You can close this tab and return to your terminal.';
+          statusEl.textContent = '✓ Terminal auto-connected! You can close this tab.';
           statusEl.style.color = '#3fb950';
           setTimeout(() => window.close(), 3000);
         }
       } catch (e) {
-        statusEl.textContent = 'Ready! Return to your terminal or copy token below.';
-        statusEl.style.color = '#8b949e';
+        statusEl.textContent = 'Ready! Copy the token above and paste it into your terminal.';
       }
     }
 
     function copyToken() {
-      navigator.clipboard.writeText('/gmail token ' + base64);
-      alert('Token copied! Paste into llmcode terminal: /gmail token <token>');
+      const box = document.getElementById('tokenBox');
+      box.select();
+      navigator.clipboard.writeText(base64);
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = '✓ Copied to Clipboard!';
+      btn.style.background = '#238636';
+      setTimeout(() => {
+        btn.textContent = '📋 Copy Token';
+      }, 3000);
     }
+
+    // Attempt auto-copy to clipboard on page load
+    try {
+      navigator.clipboard.writeText(base64).then(() => {
+        const btn = document.getElementById('copyBtn');
+        if (btn) btn.textContent = '✓ Auto-Copied to Clipboard!';
+      }).catch(() => {});
+    } catch (e) {}
 
     sendToLocalCli();
   </script>
